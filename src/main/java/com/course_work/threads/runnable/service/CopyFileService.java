@@ -8,23 +8,15 @@ import java.io.RandomAccessFile;
 import com.course_work.threads.runnable.models.FileThread;
 
 public class CopyFileService {
-  // параметр β = 20mb, который является константой, единица измерения kb
   public static final int BETA = 20 * 1024 * 1024;
   public static int count = 0;
 
-
-  public void deleteFile(String filePath) {
-    File file = new File(filePath);
-    file.delete();
-  }
-
-  // Создаем новый файл, размер - размер, единица измерения - КБ
   public void createFile(File file, int size) {
     FileOutputStream fs;
     try {
       fs = new FileOutputStream(file);
 //			for (int i = 0; i < n + 1; i++) {
-      byte[] buffer = new byte[size]; // Создать файл размера
+      byte[] buffer = new byte[size];
       fs.write(buffer);
 //			}
       try {
@@ -69,9 +61,8 @@ public class CopyFileService {
     return count;
   }
 
-  public void copyFile(File oldFile, File newPath) {
-    // Количество созданных потоков, хотя бы один поток создан для записи в файл
-    int n = 1;
+  public void copyFile(final File oldFile, final File newPath) {
+    int n = Runtime.getRuntime().availableProcessors();
     if (oldFile.exists()) {
       int fileSize = (int) oldFile.length(); // Единица измерения kb
       System.out.println("Размер:\t" + fileSize);
@@ -87,9 +78,7 @@ public class CopyFileService {
           tmp = fileSize - i * BETA;
         else
           tmp = BETA;
-        // Начать запись с i * β и записать байты tmp
         fthread = new FileThread(oldFile, newPath, i * BETA, tmp, n);
-        // Запустить поток
         new Thread(fthread).start();
       }
     } else {
