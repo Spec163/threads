@@ -1,11 +1,11 @@
-package com.course_work.threads.service;
+package com.course_work.threads.runnable.service;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import com.course_work.threads.models.FileThread;
+import com.course_work.threads.runnable.models.FileThread;
 
 public class CopyFileService {
   // параметр β = 20mb, который является константой, единица измерения kb
@@ -19,10 +19,10 @@ public class CopyFileService {
   }
 
   // Создаем новый файл, размер - размер, единица измерения - КБ
-  public void createFile(String filePath, int size) {
+  public void createFile(File file, int size) {
     FileOutputStream fs;
     try {
-      fs = new FileOutputStream(filePath);
+      fs = new FileOutputStream(file);
 //			for (int i = 0; i < n + 1; i++) {
       byte[] buffer = new byte[size]; // Создать файл размера
       fs.write(buffer);
@@ -36,13 +36,11 @@ public class CopyFileService {
     } catch (Exception e) {
       e.printStackTrace();
     }
-    File file = new File(filePath);
     System.out.println("Длина:\t" + file.length());
   }
 
-  public int readFile(final String oldPath, final String newPath, final int startIndex, final int len) {
+  public int readFile(final File oldFile, final File newPath, final int startIndex, final int len) {
     int byteLen = 0;
-    File oldFile = new File(oldPath);
     FileInputStream fin = null;
 //		FileOutputStream fos = null;
     RandomAccessFile fos = null;
@@ -59,20 +57,19 @@ public class CopyFileService {
         fos.write(buff, 0, len);
         currentSumLen += byteLen;
       }
-      System.out.println("Оставшиейся символы:\t" + (byteLen + 1));
+//      System.out.println("Оставшиейся символы:\t" + (byteLen + 1));
       fos.close();
       fin.close();
     } catch (Exception e) {
-      System.out.println("Ошибка копирования файлов!\t" + len + " - " + byteLen);
+//      System.out.println("Ошибка копирования файлов!\t" + len + " - " + byteLen);
       e.printStackTrace();
     }
     count++;
-    System.out.println("Пройденный диапазон:\t" + startIndex + "---" + len);
+//    System.out.println("Пройденный диапазон:\t" + startIndex + "---" + len);
     return count;
   }
 
-  public void copyFile(String oldPath, String newPath) {
-    File oldFile = new File(oldPath);
+  public void copyFile(File oldFile, File newPath) {
     // Количество созданных потоков, хотя бы один поток создан для записи в файл
     int n = 1;
     if (oldFile.exists()) {
@@ -81,7 +78,7 @@ public class CopyFileService {
       System.out.println("β * n:\t" + BETA * n);
       // Создать новый файл под целевым путем
       this.createFile(newPath, fileSize);
-      n = (fileSize - 1) / BETA + 1; // Запустить n потоков
+      n = (fileSize - 1) / BETA + 1; // Запустить n по  токов
       System.out.println("Кол-во потоков:\t" + n);
       FileThread fthread = null;
       int tmp = 0;
@@ -91,21 +88,12 @@ public class CopyFileService {
         else
           tmp = BETA;
         // Начать запись с i * β и записать байты tmp
-        fthread = new FileThread(oldPath, newPath, i * BETA, tmp, n);
+        fthread = new FileThread(oldFile, newPath, i * BETA, tmp, n);
         // Запустить поток
         new Thread(fthread).start();
       }
     } else {
-      System.out.println(oldPath + " не существует!");
+      System.out.println(oldFile + " не существует!");
     }
-  }
-
-  public boolean move() {
-    boolean flag = false;
-    File oldFile = new File("D:\\123.txt");
-    String newName = "D: \\ \\123-copy.txt";
-    File newFile = new File(newName);
-    flag = oldFile.renameTo(newFile);
-    return flag;
   }
 }
