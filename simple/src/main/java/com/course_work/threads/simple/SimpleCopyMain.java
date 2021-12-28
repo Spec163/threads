@@ -6,14 +6,17 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.rmi.RemoteException;
 import java.util.Objects;
 import java.util.Scanner;
 
 public class SimpleCopyMain {
+  private static final int kByte = 1024;
+
   private static void copyFileUsingStream(final File sourceRepo, final String target) throws IOException {
+    final long start = System.currentTimeMillis();
     InputStream is = null;
     OutputStream os = null;
+    long folderSize = 0;
     try {
       for (File file : Objects.requireNonNull(sourceRepo.listFiles())) {
         is = new FileInputStream(file);
@@ -23,11 +26,17 @@ public class SimpleCopyMain {
         while ((length = is.read(buffer)) > 0) {
           os.write(buffer, 0, length);
         }
+        System.out.println(String.format("Размер файла %s: %s КБ", file.getName(), (file.length() / kByte)));
+        folderSize += file.length();
       }
     } finally {
       is.close();
       os.close();
     }
+    System.out.println(String.format("\nОбщий объём скопированных файлов = %s КБ", (folderSize / kByte)));
+    System.out.println(String.format(
+            "Время копирования файлов с помощью FileChannel = %s мс",
+            (System.currentTimeMillis() - start)));
   }
 
   public static void main(String[] args) throws IOException {
@@ -36,20 +45,17 @@ public class SimpleCopyMain {
 
     if (sc.hasNext()) {
       final File sourceRepo = new File(sc.next());
-
       if (sc.hasNext()) {
         targetRepo = sc.next();
       } else {
-        throw new RemoteException("Введите путь до целевого метста копирования!");
+        throw new RuntimeException("Введите путь до целевого метста копирования!");
       }
       if (sourceRepo.exists() && !sourceRepo.isDirectory()) {
-        throw new RemoteException("В указанной директории отсутствуют файлы!");
+        throw new RuntimeException("В указанной директории отсутствуют файлы!");
       }
-      final long start = System.nanoTime();
       copyFileUsingStream(sourceRepo, targetRepo);
-      System.out.println("Время копирования файлов в один поток = " + (System.nanoTime() - start));
     } else {
-      throw new RemoteException("Введите путь до директории с файлами в input.txt");
+      throw new RuntimeException("Введите путь до директории с файлами в input.txt");
     }
   }
 }
